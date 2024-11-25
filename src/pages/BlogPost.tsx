@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, User, MessageCircle, Trash2 } from 'lucide-react';
 import { storage } from '../utils/storage';
+import type { BlogPost as BlogPostType } from '../types';
 
 interface Comment {
   id: string;
@@ -12,10 +13,22 @@ interface Comment {
 
 export default function BlogPost() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [post, setPost] = useState<BlogPostType | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [commentAuthor, setCommentAuthor] = useState('');
   const whatsappLink = storage.get('whatsappLink', '');
+
+  useEffect(() => {
+    const posts = storage.get<BlogPostType[]>('blogPosts', []);
+    const foundPost = posts.find(p => p.id === id);
+    if (foundPost) {
+      setPost(foundPost);
+    } else {
+      navigate('/blog');
+    }
+  }, [id, navigate]);
 
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,25 +49,36 @@ export default function BlogPost() {
     setComments(comments.filter(comment => comment.id !== commentId));
   };
 
+  if (!post) {
+    return null;
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <article className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Annual Textile Exhibition Coming Soon</h1>
+          {post.image && (
+            <img 
+              src={post.image} 
+              alt={post.title}
+              className="w-full h-64 object-cover rounded-lg mb-6"
+            />
+          )}
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">{post.title}</h1>
           
           <div className="flex items-center space-x-4 text-gray-600 mb-6">
             <div className="flex items-center">
               <Calendar className="h-4 w-4 mr-2" />
-              <span>2024-03-15</span>
+              <span>{post.date}</span>
             </div>
             <div className="flex items-center">
               <User className="h-4 w-4 mr-2" />
-              <span>Admin</span>
+              <span>{post.author}</span>
             </div>
           </div>
           
           <div className="prose max-w-none">
-            <p>Join us for the biggest textile exhibition of the year featuring local artisans and their masterpieces. Experience the rich heritage of Elampillai's textile industry.</p>
+            <p className="text-gray-600 whitespace-pre-wrap">{post.content}</p>
           </div>
 
           {whatsappLink && (
