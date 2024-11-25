@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import Header from './components/Header';
 import Home from './pages/Home';
 import AdminDashboard from './pages/AdminDashboard';
@@ -13,6 +15,8 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Header />
+        <Analytics />
+        <SpeedInsights />
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
