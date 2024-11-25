@@ -1,20 +1,26 @@
-import React from 'react';
-import BlogCard from '../components/BlogCard';
+import React, { useState, useEffect } from 'react';
+import BlogCard from '../components/BlogCard'; // Adjust import path
 import { storage } from '../utils/storage';
-import type { BlogPost } from '../types';
+import type { BlogPost as BlogPostType } from '../types';
 
-export default function Blog() {
-  const posts = storage.get<BlogPost[]>('blogPosts', []);
+export default function BlogPage() {
+  const [posts, setPosts] = useState<BlogPostType[]>([]);
+
+  useEffect(() => {
+    // Load posts from storage when component mounts
+    const savedPosts = storage.get('blogPosts', []);
+    console.log('Loaded posts:', savedPosts); // Debug log
+    setPosts(savedPosts);
+  }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">News & Updates</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Blog Posts</h1>
+      
       {posts.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600">No posts available yet.</p>
-        </div>
+        <p>No blog posts available.</p>
       ) : (
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map(post => (
             <BlogCard key={post.id} post={post} />
           ))}
