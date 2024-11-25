@@ -1,112 +1,128 @@
 import React, { useState, useEffect } from 'react';
 import { storage } from '../../utils/storage';
 import type { BlogPost } from '../../types';
+import { v4 as uuidv4 } from 'uuid'; // Recommended for generating unique IDs
 
 export function BlogEditor() {
   const [posts, setPosts] = useState<BlogPost[]>(() => 
     storage.get('blogPosts', [])
   );
-  const [currentPost, setCurrentPost] = useState<Partial<BlogPost>>({});
 
+  const [newPost, setNewPost] = useState<Partial<BlogPost>>({
+    title: '',
+    content: '',
+    author: '',
+    image: ''
+  });
+
+  // Load posts from storage on component mount
   useEffect(() => {
-    storage.set('blogPosts', posts);
-  }, [posts]);
+    const savedPosts = storage.get('blogPosts', []);
+    setPosts(savedPosts);
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPost.title?.trim()) return;
-
-    if (currentPost.id) {
-      setPosts(posts.map(post => 
-        post.id === currentPost.id ? { ...post, ...currentPost } : post
-      ));
-    } else {
-      const newPost: BlogPost = {
-        id: Date.now().toString(),
-        title: currentPost.title,
-        content: currentPost.content || '',
-        date: new Date().toISOString().split('T')[0],
-        author: 'Admin',
-        image: currentPost.image
-      };
-      setPosts([...posts, newPost]);
-    }
-    setCurrentPost({});
+  // Function to save blog posts
+  const saveBlogPosts = (updatedPosts: BlogPost[]) => {
+    storage.set('blogPosts', updatedPosts);
+    setPosts(updatedPosts);
   };
 
-  const deletePost = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      setPosts(posts.filter(post => post.id !== id));
-    }
+  // Handle creating a new blog post
+  const handleCreatePost = () => {
+    if (!newPost.title || !newPost.content) return;
+
+    const postToAdd: BlogPost = {
+      id: uuidv4(), // Generate unique ID
+      title: newPost.title || '',
+      content: newPost.content || '',
+      author: newPost.author || 'Admin',
+      image: newPost.image || '',
+      date: new Date().toLocaleDateString()
+    };
+
+    const updatedPosts = [...posts, postToAdd];
+    saveBlogPosts(updatedPosts);
+
+    // Reset form
+    setNewPost({
+      title: '',
+      content: '',
+      author: '',
+      image: ''
+    });
+  };
+
+  // Handle editing an existing post
+  const handleEditPost = (id: string, updatedPost: Partial<BlogPost>) => {
+    const updatedPosts = posts.map(post => 
+      post.id === id ? { ...post, ...updatedPost } : post
+    );
+    saveBlogPosts(updatedPosts);
+  };
+
+  // Handle deleting a post
+  const handleDeletePost = (id: string) => {
+    const updatedPosts = posts.filter(post => post.id !== id);
+    saveBlogPosts(updatedPosts);
   };
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
-        <div className="grid grid-cols-1 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Title *</label>
-            <input
-              type="text"
-              value={currentPost.title || ''}
-              onChange={e => setCurrentPost({ ...currentPost, title: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Content</label>
-            <textarea
-              value={currentPost.content || ''}
-              onChange={e => setCurrentPost({ ...currentPost, content: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              rows={4}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Image URL</label>
-            <input
-              type="url"
-              value={currentPost.image || ''}
-              onChange={e => setCurrentPost({ ...currentPost, image: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            />
-          </div>
-          <button
-            type="submit"
-            className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
-          >
-            {currentPost.id ? 'Update Post' : 'Add Post'}
-          </button>
-        </div>
-      </form>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">Blog Posts</h2>
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium mb-4">Existing Posts</h3>
-        <div className="space-y-4">
-          {posts.map(post => (
-            <div key={post.id} className="flex items-center justify-between p-4 border rounded">
-              <div>
-                <h4 className="font-medium">{post.title}</h4>
-                <p className="text-sm text-gray-600">{post.date}</p>
-              </div>
-              <div className="space-x-2">
-                <button
-                  onClick={() => setCurrentPost(post)}
-                  className="text-purple-600 hover:text-purple-800"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deletePost(post.id)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  Delete
-                </button>
-              </div>
+      {/* New Post Form */}
+      <div className="mb-6">
+        <input 
+          type="text"
+          placeholder="Title"
+          value={newPost.title}
+          onChange={(e) => setNewPost({...newPost, title: e.target.value})}
+          className="w-full p-2 border rounded mb-2"
+        />
+        <textarea 
+          placeholder="Content"
+          value={newPost.content}
+          onChange={(e) => setNewPost({...newPost, content: e.target.value})}
+          className="w-full p-2 border rounded mb-2"
+          rows={4}
+        />
+        <input 
+          type="text"
+          placeholder="Image URL (optional)"
+          value={newPost.image}
+          onChange={(e) => setNewPost({...newPost, image: e.target.value})}
+          className="w-full p-2 border rounded mb-2"
+        />
+        <button 
+          onClick={handleCreatePost}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Create Post
+        </button>
+      </div>
+
+      {/* Existing Posts List */}
+      <div>
+        {posts.map(post => (
+          <div key={post.id} className="border p-4 mb-4 rounded">
+            <h3 className="text-xl font-semibold">{post.title}</h3>
+            <p>{post.content.substring(0, 100)}...</p>
+            <div className="mt-2 flex space-x-2">
+              <button 
+                onClick={() => handleEditPost(post.id, { /* edit logic */ })}
+                className="bg-yellow-500 text-white px-2 py-1 rounded"
+              >
+                Edit
+              </button>
+              <button 
+                onClick={() => handleDeletePost(post.id)}
+                className="bg-red-500 text-white px-2 py-1 rounded"
+              >
+                Delete
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
