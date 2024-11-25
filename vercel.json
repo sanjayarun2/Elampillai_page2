@@ -1,10 +1,41 @@
 {
-    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
-    "routes": [
-      {
-        "src": "/[^.]+",
-        "dest": "/",
-        "status": 200
-      }
-    ]
-  }
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "routes": [
+    { 
+      "handle": "filesystem"
+    },
+    {
+      "src": "/news",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/news/(.*)",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/shops",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/shops/(.*)",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/marketplaces",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/marketplaces/(.*)",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
