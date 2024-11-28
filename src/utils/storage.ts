@@ -1,20 +1,19 @@
-export const storage = {
-  set: <T>(key: string, value: T) => {
+// src/utils/storage.ts
+export const persistentStorage = {
+  set: (key: string, data: any) => {
+    // Use localStorage with fallback to sessionStorage
     try {
-      localStorage.setItem(key, JSON.stringify(value));
-      console.log(`Stored ${key}:`, value); // Debug log
-    } catch (error) {
-      console.error('Storage error:', error);
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch {
+      sessionStorage.setItem(key, JSON.stringify(data));
     }
   },
-  get: <T>(key: string, defaultValue: T): T => {
+  get: (key: string, defaultValue: any = []) => {
     try {
-      const item = localStorage.getItem(key);
-      const parsedItem = item ? JSON.parse(item) : defaultValue;
-      console.log(`Retrieved ${key}:`, parsedItem); // Debug log
-      return parsedItem;
-    } catch (error) {
-      console.error('Retrieval error:', error);
+      const stored = localStorage.getItem(key) || 
+                     sessionStorage.getItem(key);
+      return stored ? JSON.parse(stored) : defaultValue;
+    } catch {
       return defaultValue;
     }
   }
